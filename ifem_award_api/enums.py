@@ -7,7 +7,7 @@ class PatientPhase(Enum):
     INVESTIGATIONS_PENDING = "investigations_pending"
     TREATMED = "treatment"
     ADMITTED = "admitted"
-    DISCHARgED = "discharged"
+    DISCHARGED = "discharged"
 
 class InvestigationState(Enum):
     ORDERED = "ordered" # Physician has asked that a test be done

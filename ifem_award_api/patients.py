@@ -9,7 +9,7 @@ from .enums import PatientPhase, InvestigationState, TriageCategory
 class Patient:
     id: str
     arrival_time: datetime
-    triage_category: TriageCategory
+    triage_category: str
     queue_position: dict
     status: dict
     time_elapsed: int
@@ -17,14 +17,17 @@ class Patient:
     def serialize(self):
         """Convert patient to JSON-serializable dict."""
         serialized = {**self.__dict__}
-        serialized['arrival_time'] = self.arrival_time.isoformat()
-        serialized['triage_category'] = self.triage_category.value
-        serialized['status']['current_phase'] = self.status['current_phase'].value
+        if isinstance(self.arrival_time, datetime):
+            serialized['arrival_time'] = self.arrival_time.isoformat()
+        else:
+            serialized['arrival_time'] = self.arrival_time
+        serialized['triage_category'] = self.triage_category
+        serialized['status']['current_phase'] = self.status['current_phase']
         
         if 'investigations' in self.status:
             serialized['status']['investigations'] = {
-                'labs': self.status['investigations']['labs'].value,
-                'imaging': self.status['investigations']['imaging'].value
+                'labs': self.status['investigations']['labs'],
+                'imaging': self.status['investigations']['imaging']
             }
         
         return serialized
@@ -43,15 +46,15 @@ def generate_mock_triage_category():
     roll = random.random() * 100
     
     if roll < 1:
-        return TriageCategory.RESUSCITATION
+        return TriageCategory.RESUSCITATION.value
     elif roll < 16:
-        return TriageCategory.EMERGENT
+        return TriageCategory.EMERGENT.value
     elif roll < 61:
-        return TriageCategory.URGENT
+        return TriageCategory.URGENT.value
     elif roll < 91:
-        return TriageCategory.LESS_URGENT
+        return TriageCategory.LESS_URGENT.value
     else:
-        return TriageCategory.NON_URGENT
+        return TriageCategory.NON_URGENT.value
 
 def generate_mock_wait_time(triage_category) -> int:
     # Average wait times by category (in minutes):
@@ -62,11 +65,11 @@ def generate_mock_wait_time(triage_category) -> int:
     # CTAS 5: 120-360 mins
     
     wait_ranges = {
-        TriageCategory.RESUSCITATION: (0, 5),
-        TriageCategory.EMERGENT: (15, 30),
-        TriageCategory.URGENT: (30, 120),
-        TriageCategory.LESS_URGENT: (60, 240),
-        TriageCategory.NON_URGENT: (120, 360)
+        TriageCategory.RESUSCITATION.value: (0, 5),
+        TriageCategory.EMERGENT.value: (15, 30),
+        TriageCategory.URGENT.value: (30, 120),
+        TriageCategory.LESS_URGENT.value: (60, 240),
+        TriageCategory.NON_URGENT.value: (120, 360)
     }
     
     min_wait, max_wait = wait_ranges[triage_category]
@@ -75,20 +78,20 @@ def generate_mock_wait_time(triage_category) -> int:
 def generate_mock_patient_status():
     phase = random.choice(list(PatientPhase))
     
-    status = {'current_phase': phase}
+    status = {'current_phase': phase.value}
 
-    if phase in [PatientPhase.REGISTERED, PatientPhase.TRIAGED]:
+    if phase in [PatientPhase.REGISTERED.value, PatientPhase.TRIAGED.value]:
         return status
         
-    if phase == PatientPhase.INVESTIGATIONS_PENDING:
+    if phase == PatientPhase.INVESTIGATIONS_PENDING.value:
         status['investigations'] = {
-            'labs': random.choice([InvestigationState.ORDERED, InvestigationState.PENDING]),
-            'imaging': random.choice([InvestigationState.ORDERED, InvestigationState.PENDING])
+            'labs': random.choice([InvestigationState.ORDERED.value, InvestigationState.PENDING.value]),
+            'imaging': random.choice([InvestigationState.ORDERED.value, InvestigationState.PENDING.value])
         }
     else:  # TREATMENT, ADMITTED, DISCHARGED
         status['investigations'] = {
-            'labs': InvestigationState.REPORTED,
-            'imaging': InvestigationState.REPORTED
+            'labs': InvestigationState.REPORTED.value,
+            'imaging': InvestigationState.REPORTED.value
         }
     
     return status
