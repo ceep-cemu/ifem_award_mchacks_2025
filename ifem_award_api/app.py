@@ -138,7 +138,7 @@ def get_queue():
         minutes_passed = int((current_time - last_update).total_seconds() / 60)
         updates_needed = minutes_passed // 15
         
-        for _ in range(1):
+        for _ in range(updates_needed):
             update_patients()
 
         if updates_needed > 0:
@@ -183,11 +183,17 @@ def get_queue():
 
 @app.route('/api/v1/stats/current')
 def get_stats():
-    mock_patients = generate_mock_patients()
+    patients = list(ed_state.get_patients().values())
+    
+    if not patients:
+        patients = generate_mock_patients()
+        for patient in patients:
+            ed_state.add_patient(patient)
+            
     category_breakdown = {i: 0 for i in range(1, 6)}
     wait_times = {i: [] for i in range(1, 6)}
     
-    for patient in mock_patients:
+    for patient in patients:
         category = patient.triage_category
         category_breakdown[category] += 1
         wait_times[category].append(patient.time_elapsed)
